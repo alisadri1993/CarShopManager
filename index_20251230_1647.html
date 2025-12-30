@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مدیریت درآمد تعمیرگاه خودرو</title>
+    <!-- Add these to your index.html head section -->
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -377,90 +378,6 @@
             padding-left: 40px;
         }
 
-        /* === جستجوی پیشرفته مشتری === */
-        .searchable-dropdown {
-            position: relative;
-            width: 100%;
-        }
-
-        .dropdown-search-box {
-            position: relative;
-        }
-
-        .dropdown-search-box i {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--gray);
-        }
-
-        .dropdown-results {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            max-height: 300px;
-            overflow-y: auto;
-            background: white;
-            border: 1px solid var(--light-gray);
-            border-top: none;
-            border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-            box-shadow: var(--shadow);
-            z-index: 1000;
-            margin-top: -1px;
-        }
-
-        .customer-option {
-            padding: 12px 16px;
-            cursor: pointer;
-            transition: var(--transition);
-            border-bottom: 1px solid var(--light-gray);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .customer-option:hover {
-            background-color: rgba(67, 97, 238, 0.1);
-        }
-
-        .customer-option.selected {
-            background-color: rgba(67, 97, 238, 0.15);
-            border-right: 3px solid var(--primary);
-        }
-
-        .customer-info {
-            flex: 1;
-        }
-
-        .customer-name {
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 4px;
-        }
-
-        .customer-details {
-            font-size: 12px;
-            color: var(--gray);
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .customer-details span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .no-results {
-            padding: 16px;
-            text-align: center;
-            color: var(--gray);
-            font-style: italic;
-        }
-
         /* === دکمه‌ها === */
         .btn {
             padding: 12px 24px;
@@ -793,46 +710,6 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
-        /* === استایل مودال پیامک === */
-        .sms-info {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 20px;
-            padding: 12px;
-            background: var(--light);
-            border-radius: var(--radius-sm);
-        }
-
-        .sms-info p {
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .sms-preview {
-            margin: 15px 0;
-            padding: 12px;
-            background: #f8f9fa;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--light-gray);
-        }
-
-        .sms-preview-text {
-            margin-top: 8px;
-            font-size: 14px;
-            color: var(--dark);
-            line-height: 1.6;
-            white-space: pre-line;
-        }
-
-        .sms-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 24px;
-        }
-
         /* === حالت خالی === */
         .empty-state {
             text-align: center;
@@ -913,7 +790,7 @@
             transform: translateX(50%);
             width: 30px;
             height: 3px;
-            background: linear-gradient(to right, var(--primary), var(--primary-dark);
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
             border-radius: 2px;
         }
 
@@ -975,10 +852,6 @@
                 font-size: 12px;
                 padding: 8px 12px;
             }
-            
-            .sms-actions {
-                flex-direction: column;
-            }
         }
 
         @media (max-width: 480px) {
@@ -1000,11 +873,6 @@
             .pagination-controls {
                 flex-wrap: wrap;
                 justify-content: center;
-            }
-            
-            .customer-details {
-                flex-direction: column;
-                gap: 4px;
             }
         }
 
@@ -1117,22 +985,13 @@
                     <form id="incomeForm">
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="customerSearchInput">
+                                <label for="customerName">
                                     <i class="fas fa-user"></i>
-                                    جستجوی مشتری
+                                    نام مشتری
                                 </label>
-                                <div class="searchable-dropdown">
-                                    <div class="dropdown-search-box">
-                                        <input type="text" id="customerSearchInput" class="form-control" 
-                                               placeholder="جستجو بر اساس نام، شماره موبایل یا مدل خودرو..." 
-                                               autocomplete="off">
-                                        <i class="fas fa-search"></i>
-                                    </div>
-                                    <div class="dropdown-results" id="customerSearchResults" style="display: none;">
-                                        <!-- نتایج جستجو اینجا نمایش داده می‌شوند -->
-                                    </div>
-                                    <input type="hidden" id="selectedCustomerId" name="customerId">
-                                </div>
+                                <select id="customerName" class="form-control">
+                                    <option value="">انتخاب مشتری</option>
+                                </select>
                             </div>
                             
                             <div class="form-group">
@@ -1175,11 +1034,9 @@
                         <div class="form-group">
                             <label for="description">
                                 <i class="fas fa-file-alt"></i>
-                                توضیحات (متن پیامک)
+                                توضیحات
                             </label>
-                            <textarea id="description" class="form-control" rows="4" 
-                                      placeholder="شرح خدمات ارائه شده (این متن به عنوان پیامک برای مشتری ارسال خواهد شد)" 
-                                      required></textarea>
+                            <textarea id="description" class="form-control" rows="4" placeholder="شرح خدمات ارائه شده" required></textarea>
                         </div>
                         
                         <button type="submit" class="btn btn-primary btn-block" id="submitIncome">
@@ -1264,7 +1121,7 @@
                     <h2>مدیریت مشتریان</h2>
                     <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
                         <div class="search-box">
-                            <input type="text" id="customerSearchListInput" placeholder="جستجو...">
+                            <input type="text" id="customerSearchInput" placeholder="جستجو...">
                             <i class="fas fa-search"></i>
                         </div>
                         <button class="btn btn-primary" onclick="openAddCustomerModal()">
@@ -1408,80 +1265,6 @@
         </div>
     </div>
 
-    <!-- مودال ارسال پیامک -->
-    <div id="smsModal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>ارسال پیامک به مشتری</h2>
-            
-            <div class="sms-info">
-                <p><strong>مشتری:</strong> <span id="smsCustomerName"></span></p>
-                <p><strong>شماره موبایل:</strong> <span id="smsCustomerMobile"></span></p>
-                <p><strong>خدمات انجام شده:</strong> <span id="smsServiceType"></span></p>
-                <p><strong>مبلغ پرداختی:</strong> <span id="smsAmount"></span> تومان</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="smsMessage">
-                    <i class="fas fa-envelope"></i>
-                    متن پیامک
-                </label>
-                <textarea id="smsMessage" class="form-control" rows="5" readonly></textarea>
-                <div style="display: flex; justify-content: space-between; margin-top: 5px;">
-                    <span class="amount-hint" id="smsCharCount">0/160 کاراکتر</span>
-                    <span class="amount-hint" id="smsSmsCount">0 پیامک</span>
-                </div>
-            </div>
-            
-            <div class="sms-preview">
-                <strong>پیش‌نمایش پیامک:</strong>
-                <div class="sms-preview-text" id="smsPreviewText"></div>
-            </div>
-            
-            <div class="sms-actions">
-                <button type="button" class="btn btn-primary" style="flex: 1;" onclick="sendSMS()" id="sendSmsBtn">
-                    <i class="fas fa-paper-plane"></i> ارسال پیامک
-                </button>
-                <button type="button" class="btn" onclick="skipSMS()" 
-                        style="flex: 1; background: var(--light); color: var(--dark); border: 1px solid var(--light-gray);">
-                    <i class="fas fa-times"></i> عدم ارسال
-                </button>
-                <button type="button" class="btn" onclick="editSMSMessage()" 
-                        style="flex: 1; background: var(--light); color: var(--primary); border: 1px solid var(--light-gray);">
-                    <i class="fas fa-edit"></i> ویرایش متن
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- مودال ویرایش پیامک -->
-    <div id="editSmsModal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>ویرایش متن پیامک</h2>
-            
-            <div class="form-group">
-                <label for="editSmsMessage">
-                    <i class="fas fa-edit"></i>
-                    ویرایش متن پیامک
-                </label>
-                <textarea id="editSmsMessage" class="form-control" rows="5"></textarea>
-                <div style="display: flex; justify-content: space-between; margin-top: 5px;">
-                    <span class="amount-hint" id="editSmsCharCount">0/160 کاراکتر</span>
-                    <span class="amount-hint" id="editSmsSmsCount">0 پیامک</span>
-                </div>
-            </div>
-            
-            <div class="sms-actions">
-                <button type="button" class="btn btn-primary" style="flex: 1;" onclick="saveEditedSMS()">
-                    <i class="fas fa-save"></i> ذخیره و ادامه
-                </button>
-                <button type="button" class="btn" onclick="cancelEditSMS()" 
-                        style="flex: 1; background: var(--light); color: var(--dark); border: 1px solid var(--light-gray);">
-                    <i class="fas fa-times"></i> انصراف
-                </button>
-            </div>
-        </div>
-    </div>
-
     <script>
         // ==================== متغیرهای جهانی ====================
         let db;
@@ -1492,8 +1275,6 @@
         let currentSort = { field: 'date', order: 'desc' };
         let isOnline = navigator.onLine;
         let selectedDate = new persianDate();
-        let selectedCustomerForSMS = null;
-        let lastTransactionForSMS = null;
 
         // ==================== متغیرهای صفحه‌بندی ====================
         let transactionsPagination = {
@@ -1537,6 +1318,7 @@
             }
             
             if (pageName === 'add-income') {
+                updateCustomerDropdown();
                 document.getElementById('persianDate').value = selectedDate.format('YYYY/MM/DD');
             }
         }
@@ -1697,7 +1479,7 @@
 
         // ==================== مدیریت صفحه‌بندی مشتریان ====================
         function updateCustomersPagination() {
-            const searchTerm = document.getElementById('customerSearchListInput').value.toLowerCase();
+            const searchTerm = document.getElementById('customerSearchInput').value.toLowerCase();
             
             let filtered = customers;
             if (searchTerm) {
@@ -1814,128 +1596,6 @@
             updateCustomersPagination();
         }
 
-        // ==================== مدیریت جستجوی مشتری در فرم ثبت درآمد ====================
-        function initCustomerSearch() {
-            const searchInput = document.getElementById('customerSearchInput');
-            const resultsContainer = document.getElementById('customerSearchResults');
-            
-            if (!searchInput || !resultsContainer) return;
-            
-            searchInput.addEventListener('input', function(e) {
-                const searchTerm = this.value.trim().toLowerCase();
-                
-                if (searchTerm.length < 2) {
-                    resultsContainer.style.display = 'none';
-                    return;
-                }
-                
-                const filteredCustomers = customers.filter(customer => {
-                    return (
-                        customer.name.toLowerCase().includes(searchTerm) ||
-                        customer.mobile.includes(searchTerm) ||
-                        (customer.carModel && customer.carModel.toLowerCase().includes(searchTerm))
-                    );
-                });
-                
-                displayCustomerResults(filteredCustomers);
-            });
-            
-            searchInput.addEventListener('focus', function() {
-                if (this.value.trim().length >= 2) {
-                    const searchTerm = this.value.trim().toLowerCase();
-                    const filteredCustomers = customers.filter(customer => {
-                        return (
-                            customer.name.toLowerCase().includes(searchTerm) ||
-                            customer.mobile.includes(searchTerm) ||
-                            (customer.carModel && customer.carModel.toLowerCase().includes(searchTerm))
-                        );
-                    });
-                    displayCustomerResults(filteredCustomers);
-                }
-            });
-            
-            // بستن نتایج هنگام کلیک خارج
-            document.addEventListener('click', function(e) {
-                if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target)) {
-                    resultsContainer.style.display = 'none';
-                }
-            });
-        }
-
-        function displayCustomerResults(filteredCustomers) {
-            const resultsContainer = document.getElementById('customerSearchResults');
-            
-            if (!resultsContainer) return;
-            
-            resultsContainer.innerHTML = '';
-            
-            if (filteredCustomers.length === 0) {
-                resultsContainer.innerHTML = '<div class="no-results">مشتری یافت نشد</div>';
-                resultsContainer.style.display = 'block';
-                return;
-            }
-            
-            filteredCustomers.forEach(customer => {
-                const option = document.createElement('div');
-                option.className = 'customer-option';
-                option.setAttribute('data-id', customer.id);
-                
-                option.innerHTML = `
-                    <div class="customer-info">
-                        <div class="customer-name">${customer.name}</div>
-                        <div class="customer-details">
-                            <span><i class="fas fa-mobile-alt"></i> ${customer.mobile}</span>
-                            <span><i class="fas fa-car"></i> ${customer.carModel || 'نامشخص'}</span>
-                            <span><i class="fas fa-history"></i> ${customer.visitCount || 1} مراجعه</span>
-                        </div>
-                    </div>
-                    <i class="fas fa-check-circle" style="color: var(--success); display: none;"></i>
-                `;
-                
-                option.addEventListener('click', function() {
-                    selectCustomer(customer.id);
-                });
-                
-                resultsContainer.appendChild(option);
-            });
-            
-            resultsContainer.style.display = 'block';
-        }
-
-        function selectCustomer(customerId) {
-            const customer = customers.find(c => c.id === customerId);
-            if (!customer) return;
-            
-            const searchInput = document.getElementById('customerSearchInput');
-            const selectedCustomerIdInput = document.getElementById('selectedCustomerId');
-            const resultsContainer = document.getElementById('customerSearchResults');
-            
-            if (searchInput) {
-                searchInput.value = `${customer.name} - ${customer.carModel}`;
-            }
-            
-            if (selectedCustomerIdInput) {
-                selectedCustomerIdInput.value = customerId;
-            }
-            
-            if (resultsContainer) {
-                resultsContainer.style.display = 'none';
-            }
-            
-            selectedCustomerForSMS = customer;
-            
-            document.querySelectorAll('.customer-option').forEach(option => {
-                const id = parseInt(option.getAttribute('data-id'));
-                if (id === customerId) {
-                    option.classList.add('selected');
-                    option.querySelector('.fa-check-circle').style.display = 'block';
-                } else {
-                    option.classList.remove('selected');
-                    option.querySelector('.fa-check-circle').style.display = 'none';
-                }
-            });
-        }
-
         // ==================== رویدادهای اولیه ====================
         document.addEventListener('DOMContentLoaded', function() {
             updateConnectionStatus();
@@ -1944,12 +1604,14 @@
             
             initDB();
             
+            // تنظیم تاریخ امروز
             document.getElementById('persianDate').value = selectedDate.format('YYYY/MM/DD');
             
+            // راه‌اندازی فرم‌ها
             setupIncomeForm();
             setupCustomerForm();
-            initCustomerSearch();
             
+            // راه‌اندازی نویگیشن
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -1958,6 +1620,7 @@
                 });
             });
             
+            // جستجو در تاریخچه
             const searchInput = document.getElementById('searchInput');
             if (searchInput) {
                 searchInput.addEventListener('input', function(e) {
@@ -1966,14 +1629,16 @@
                 });
             }
             
-            const customerSearchListInput = document.getElementById('customerSearchListInput');
-            if (customerSearchListInput) {
-                customerSearchListInput.addEventListener('input', function(e) {
+            // جستجو در مشتریان
+            const customerSearchInput = document.getElementById('customerSearchInput');
+            if (customerSearchInput) {
+                customerSearchInput.addEventListener('input', function(e) {
                     customersPagination.currentPage = 1;
                     updateCustomersPagination();
                 });
             }
             
+            // دکمه‌های مرتب‌سازی
             document.querySelectorAll('.sort-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const field = this.dataset.sort;
@@ -2002,24 +1667,14 @@
                 });
             });
             
+            // بستن مودال
             document.getElementById('customerModal').addEventListener('click', function(e) {
                 if (e.target === this) {
                     closeCustomerModal();
                 }
             });
             
-            document.getElementById('smsModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    skipSMS();
-                }
-            });
-            
-            document.getElementById('editSmsModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    cancelEditSMS();
-                }
-            });
-            
+            // اضافه کردن داده‌های نمونه
             setTimeout(() => {
                 if (transactions.length === 0 && customers.length === 0) {
                     addSampleData();
@@ -2105,20 +1760,25 @@
                 console.log(`تعداد ${customers.length} مشتری بارگذاری شد`);
                 updateStats();
                 updateCustomersPagination();
+                updateCustomerDropdown();
             };
         }
 
         // ==================== به‌روزرسانی آمار ====================
         function updateStats() {
+            // کل درآمد
             const totalIncome = transactions.reduce((sum, t) => sum + (parseInt(t.amount.replace(/,/g, '')) || 0), 0);
             document.getElementById('total-income').textContent = formatNumber(totalIncome);
             
+            // تعداد تراکنش‌ها
             document.getElementById('total-transactions').textContent = formatNumber(transactions.length);
             
+            // میانگین درآمد روزانه
             const dates = [...new Set(transactions.map(t => t.date))];
             const dailyAvg = dates.length > 0 ? totalIncome / dates.length : 0;
             document.getElementById('average-income').textContent = formatNumber(Math.round(dailyAvg));
             
+            // تعداد مشتریان
             document.getElementById('customers-count').textContent = formatNumber(customers.length);
         }
 
@@ -2269,14 +1929,14 @@
             incomeForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
-                const customerId = document.getElementById('selectedCustomerId').value;
+                const customerId = document.getElementById('customerName').value;
                 const amount = document.getElementById('amount').value;
                 const date = document.getElementById('persianDate').value;
                 const serviceType = document.getElementById('serviceType').value;
                 const description = document.getElementById('description').value;
                 
-                if (!customerId || !amount || !date || !description) {
-                    showToast('لطفاً تمام فیلدهای ضروری را پر کنید', 'error');
+                if (!customerId || !amount || !date) {
+                    showToast('لطفاً فیلدهای ضروری را پر کنید', 'error');
                     return;
                 }
                 
@@ -2293,10 +1953,10 @@
                     createdAt: new Date().toISOString()
                 };
                 
-                lastTransactionForSMS = transaction;
                 saveTransaction(transaction);
             });
             
+            // جداکننده هزارگان
             const amountInput = document.getElementById('amount');
             if (amountInput) {
                 amountInput.addEventListener('input', function() {
@@ -2343,6 +2003,19 @@
             });
         }
 
+        function updateCustomerDropdown() {
+            const select = document.getElementById('customerName');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">انتخاب مشتری</option>';
+            customers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = customer.id;
+                option.textContent = `${customer.name} - ${customer.carModel}`;
+                select.appendChild(option);
+            });
+        }
+
         // ==================== عملیات پایگاه داده ====================
         function saveTransaction(transaction) {
             if (!db) return;
@@ -2355,43 +2028,21 @@
                 transaction.id = event.target.result;
                 transactions.push(transaction);
                 
-                if (transaction.customerId) {
-                    updateCustomerVisitCount(transaction.customerId);
-                }
-                
                 updateStats();
                 updateTransactionsPagination();
                 updateCharts();
+                showToast('درآمد جدید با موفقیت ثبت شد ✅');
                 
-                openSMSModal();
+                document.getElementById('incomeForm').reset();
+                document.getElementById('persianDate').value = selectedDate.format('YYYY/MM/DD');
+                
+                switchPage('dashboard');
             };
             
             request.onerror = function(event) {
                 console.error('خطا در ذخیره تراکنش:', event.target.error);
                 showToast('خطا در ذخیره تراکنش', 'error');
             };
-        }
-
-        function updateCustomerVisitCount(customerId) {
-            const customer = customers.find(c => c.id == customerId);
-            if (!customer) return;
-            
-            if (!customer.visitCount) {
-                customer.visitCount = 1;
-            } else {
-                customer.visitCount++;
-            }
-            
-            customer.lastVisit = new persianDate().format('YYYY/MM/DD');
-            
-            if (!db) return;
-            
-            const tx = db.transaction(['customers'], 'readwrite');
-            const store = tx.objectStore('customers');
-            store.put(customer);
-            
-            customers = customers.map(c => c.id == customerId ? customer : c);
-            updateCustomersPagination();
         }
 
         function saveCustomer(customer) {
@@ -2407,6 +2058,7 @@
                 
                 updateStats();
                 updateCustomersPagination();
+                updateCustomerDropdown();
                 showToast('مشتری جدید با موفقیت ثبت شد ✅');
                 closeCustomerModal();
             };
@@ -2435,6 +2087,7 @@
                 }
                 
                 updateCustomersPagination();
+                updateCustomerDropdown();
                 showToast('اطلاعات مشتری به‌روزرسانی شد ✅');
                 closeCustomerModal();
             };
@@ -2487,6 +2140,7 @@
                 
                 updateStats();
                 updateCustomersPagination();
+                updateCustomerDropdown();
                 updateTransactionsPagination();
                 showToast('مشتری حذف شد ✅');
             };
@@ -2528,218 +2182,8 @@
             document.getElementById('customerModal').style.display = 'none';
         }
 
-        // ==================== مودال ارسال پیامک ====================
-        function openSMSModal() {
-            if (!selectedCustomerForSMS || !lastTransactionForSMS) {
-                showToast('خطا در آماده‌سازی پیامک', 'error');
-                switchPage('dashboard');
-                return;
-            }
-            
-            document.getElementById('smsCustomerName').textContent = selectedCustomerForSMS.name;
-            document.getElementById('smsCustomerMobile').textContent = selectedCustomerForSMS.mobile;
-            document.getElementById('smsServiceType').textContent = lastTransactionForSMS.serviceType;
-            document.getElementById('smsAmount').textContent = lastTransactionForSMS.amount;
-            
-            const message = generateSMSMessage();
-            document.getElementById('smsMessage').value = message;
-            document.getElementById('smsPreviewText').textContent = message;
-            
-            updateSMSCharCount();
-            
-            document.getElementById('smsModal').style.display = 'flex';
-        }
-
-        function generateSMSMessage() {
-            if (!selectedCustomerForSMS || !lastTransactionForSMS) return '';
-            
-            const customer = selectedCustomerForSMS;
-            const transaction = lastTransactionForSMS;
-            
-            let message = `سلام ${customer.name.split(' ')[0] || customer.name} عزیز\n`;
-            message += `سرویس "${transaction.serviceType}" خودروی ${customer.carModel || 'شما'} با موفقیت انجام شد.\n`;
-            message += `مبلغ پرداختی: ${transaction.amount} تومان\n`;
-            message += `توضیحات: ${transaction.description}\n`;
-            message += `با تشکر از انتخاب شما\n`;
-            message += `تعمیرگاه ما`;
-            
-            return message;
-        }
-
-        function updateSMSCharCount() {
-            const messageTextarea = document.getElementById('smsMessage');
-            const charCount = document.getElementById('smsCharCount');
-            const smsCount = document.getElementById('smsSmsCount');
-            
-            if (!messageTextarea || !charCount || !smsCount) return;
-            
-            const text = messageTextarea.value;
-            const length = text.length;
-            const smsNeeded = Math.ceil(length / 160);
-            
-            charCount.textContent = `${length}/160 کاراکتر`;
-            smsCount.textContent = `${smsNeeded} پیامک`;
-            
-            if (length > 160) {
-                charCount.style.color = 'var(--warning)';
-            } else if (length > 140) {
-                charCount.style.color = 'var(--warning)';
-            } else {
-                charCount.style.color = 'var(--gray)';
-            }
-        }
-
-        function editSMSMessage() {
-            const message = document.getElementById('smsMessage').value;
-            document.getElementById('editSmsMessage').value = message;
-            updateEditSMSCharCount();
-            document.getElementById('smsModal').style.display = 'none';
-            document.getElementById('editSmsModal').style.display = 'flex';
-        }
-
-        function updateEditSMSCharCount() {
-            const messageTextarea = document.getElementById('editSmsMessage');
-            const charCount = document.getElementById('editSmsCharCount');
-            const smsCount = document.getElementById('editSmsSmsCount');
-            
-            if (!messageTextarea || !charCount || !smsCount) return;
-            
-            const text = messageTextarea.value;
-            const length = text.length;
-            const smsNeeded = Math.ceil(length / 160);
-            
-            charCount.textContent = `${length}/160 کاراکتر`;
-            smsCount.textContent = `${smsNeeded} پیامک`;
-            
-            if (length > 160) {
-                charCount.style.color = 'var(--warning)';
-            } else if (length > 140) {
-                charCount.style.color = 'var(--warning)';
-            } else {
-                charCount.style.color = 'var(--gray)';
-            }
-        }
-
-        function saveEditedSMS() {
-            const editedMessage = document.getElementById('editSmsMessage').value;
-            document.getElementById('smsMessage').value = editedMessage;
-            document.getElementById('smsPreviewText').textContent = editedMessage;
-            updateSMSCharCount();
-            document.getElementById('editSmsModal').style.display = 'none';
-            document.getElementById('smsModal').style.display = 'flex';
-        }
-
-        function cancelEditSMS() {
-            document.getElementById('editSmsModal').style.display = 'none';
-            document.getElementById('smsModal').style.display = 'flex';
-        }
-
-        function sendSMS() {
-            const message = document.getElementById('smsMessage').value.trim();
-            const mobile = document.getElementById('smsCustomerMobile').textContent;
-            
-            if (!message) {
-                showToast('لطفاً متن پیام را وارد کنید', 'error');
-                return;
-            }
-            
-            if (!mobile) {
-                showToast('شماره موبایل مشتری معتبر نیست', 'error');
-                return;
-            }
-            
-            const sendBtn = document.getElementById('sendSmsBtn');
-            const originalText = sendBtn.innerHTML;
-            
-            sendBtn.disabled = true;
-            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ارسال...';
-            
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            
-            if (isMobile) {
-                sendSMSViaDevice(mobile, message);
-            } else {
-                showDesktopSMSInstructions(mobile, message);
-            }
-        }
-
-        function sendSMSViaDevice(mobile, message) {
-            const formattedMobile = mobile.startsWith('0') ? mobile.substring(1) : mobile;
-            const smsLink = `sms:${formattedMobile}?body=${encodeURIComponent(message)}`;
-            
-            window.location.href = smsLink;
-            
-            setTimeout(() => {
-                const sendBtn = document.getElementById('sendSmsBtn');
-                if (sendBtn) {
-                    sendBtn.disabled = false;
-                    sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ارسال پیامک';
-                }
-                showToast('اپلیکیشن پیام‌رسان باز شد. لطفاً پیام را ارسال کنید.', 'success');
-            }, 1000);
-            
-            setTimeout(() => {
-                skipSMS();
-            }, 5000);
-        }
-
-        function showDesktopSMSInstructions(mobile, message) {
-            const instructions = `
-                <div style="text-align: center; padding: 20px;">
-                    <i class="fas fa-mobile-alt" style="font-size: 48px; color: var(--primary); margin-bottom: 16px;"></i>
-                    <h3 style="margin-bottom: 12px; color: var(--dark);">ارسال پیامک از طریق موبایل</h3>
-                    <p style="margin-bottom: 20px; color: var(--gray);">
-                        برای ارسال پیامک، لطفاً از تلفن همراه خود استفاده کنید:
-                    </p>
-                    <div style="background: var(--light); padding: 16px; border-radius: var(--radius-sm); margin: 20px 0;">
-                        <p style="margin-bottom: 8px;"><strong>شماره مقصد:</strong></p>
-                        <p style="font-family: monospace; font-size: 18px; color: var(--primary);">${mobile}</p>
-                        <p style="margin-top: 16px; margin-bottom: 8px;"><strong>متن پیام:</strong></p>
-                        <div style="background: white; padding: 12px; border-radius: var(--radius-sm); text-align: right; direction: rtl;">
-                            ${message.replace(/\n/g, '<br>')}
-                        </div>
-                    </div>
-                    <button class="btn btn-primary" onclick="copySMSToClipboard('${mobile}', \`${message}\`)">
-                        <i class="fas fa-copy"></i> کپی اطلاعات
-                    </button>
-                </div>
-            `;
-            
-            document.getElementById('smsModal').style.display = 'none';
-            
-            setTimeout(() => {
-                const modal = document.getElementById('smsModal');
-                const modalContent = modal.querySelector('.modal-content');
-                modalContent.innerHTML = instructions;
-                modal.style.display = 'flex';
-            }, 300);
-        }
-
-        function copySMSToClipboard(mobile, message) {
-            const textToCopy = `شماره: ${mobile}\n\nمتن پیام:\n${message}`;
-            
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                showToast('اطلاعات پیامک در کلیپ‌بورد کپی شد 📋');
-            }).catch(err => {
-                console.error('خطا در کپی:', err);
-                showToast('خطا در کپی اطلاعات', 'error');
-            });
-        }
-
-        function skipSMS() {
-            document.getElementById('incomeForm').reset();
-            document.getElementById('customerSearchInput').value = '';
-            document.getElementById('selectedCustomerId').value = '';
-            document.getElementById('persianDate').value = selectedDate.format('YYYY/MM/DD');
-            
-            document.getElementById('smsModal').style.display = 'none';
-            document.getElementById('editSmsModal').style.display = 'none';
-            
-            selectedCustomerForSMS = null;
-            lastTransactionForSMS = null;
-            
-            showToast('تراکنش با موفقیت ثبت شد ✅');
-            switchPage('dashboard');
+        function openEditTransactionModal(id) {
+            showToast('قابلیت ویرایش تراکنش در نسخه بعدی اضافه خواهد شد', 'error');
         }
 
         // ==================== توابع کمکی ====================
@@ -2788,6 +2232,7 @@
         function addSampleData() {
             const today = new persianDate();
             
+            // مشتریان نمونه
             const sampleCustomers = [
                 {
                     name: 'علیرضا محمدی',
@@ -2818,16 +2263,10 @@
                 }
             ];
             
+            // تراکنش‌های نمونه
             const sampleTransactions = [];
             const serviceTypes = ['تعمیرات موتور', 'تعویض روغن', 'تعمیرات برقی', 'تعویض لاستیک', 'سرویس دوره‌ای'];
             const amounts = [650000, 850000, 1250000, 1850000, 2350000];
-            const descriptions = [
-                'تعویض تسمه تایم و تنظیم موتور',
-                'تعویض روغن موتور و فیلتر هوا',
-                'تعمیر سیستم برق خودرو و شارژ باتری',
-                'تعویض لاستیک های جلو و بالانس چرخ',
-                'سرویس کامل دوره‌ای شامل تنظیم موتور و برق'
-            ];
             
             for (let i = 0; i < 15; i++) {
                 const date = today.subtract('day', i);
@@ -2841,11 +2280,12 @@
                     persianDate: date.format('YYYY/MM/DD'),
                     date: new Date().toISOString(),
                     serviceType: serviceTypes[Math.floor(Math.random() * serviceTypes.length)],
-                    description: descriptions[Math.floor(Math.random() * descriptions.length)],
+                    description: 'سرویس کامل خودرو',
                     createdAt: new Date().toISOString()
                 });
             }
             
+            // ذخیره مشتریان
             sampleCustomers.forEach(customer => {
                 if (!db) return;
                 const tx = db.transaction(['customers'], 'readwrite');
@@ -2853,6 +2293,7 @@
                 store.add(customer);
             });
             
+            // ذخیره تراکنش‌ها
             sampleTransactions.forEach(transaction => {
                 if (!db) return;
                 const tx = db.transaction(['transactions'], 'readwrite');
@@ -2864,10 +2305,6 @@
                 loadAllData();
                 showToast('داده‌های نمونه برای شروع کار اضافه شدند 📊');
             }, 500);
-        }
-
-        function openEditTransactionModal(id) {
-            showToast('قابلیت ویرایش تراکنش در نسخه بعدی اضافه خواهد شد', 'error');
         }
     </script>
 </body>
