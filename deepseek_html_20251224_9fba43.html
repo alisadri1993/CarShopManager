@@ -1,0 +1,2296 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیریت درآمد تعمیرگاه خودرو</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/persian-date@latest/dist/persian-date.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a0ca3;
+            --primary-light: #4895ef;
+            --secondary: #7209b7;
+            --success: #10b981;
+            --success-dark: #059669;
+            --danger: #ef4444;
+            --danger-dark: #dc2626;
+            --warning: #f59e0b;
+            --warning-dark: #d97706;
+            --light: #f8fafc;
+            --light-gray: #e2e8f0;
+            --gray: #64748b;
+            --dark: #1e293b;
+            --dark-gray: #334155;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 0 0 80px;
+            direction: rtl;
+        }
+
+        /* === وضعیت اینترنت === */
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1002;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+            animation: slideDown 0.4s ease-out;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .connection-status.online {
+            background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+            color: white;
+        }
+
+        .connection-status.offline {
+            background: linear-gradient(135deg, var(--danger) 0%, var(--danger-dark) 100%);
+            color: white;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* === هدر === */
+        .app-header {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 20px 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .app-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="white" opacity="0.1"/></svg>');
+            background-size: 20px 20px;
+        }
+
+        .app-header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        .app-header h1 i {
+            font-size: 28px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .app-header .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        /* === محتوای اصلی === */
+        .main-content {
+            padding: 0 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* === صفحات === */
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* === کارت‌های آمار === */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--light-gray);
+            display: flex;
+            align-items: center;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 16px;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .income-icon { background-color: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .count-icon { background-color: rgba(67, 97, 238, 0.15); color: var(--primary); }
+        .average-icon { background-color: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .recent-icon { background-color: rgba(239, 68, 68, 0.15); color: var(--danger); }
+
+        .stat-info h3 {
+            font-size: 24px;
+            margin-bottom: 4px;
+            color: var(--dark);
+            font-weight: 700;
+        }
+
+        .stat-info p {
+            color: var(--gray);
+            font-size: 13px;
+        }
+
+        /* === نمودارها === */
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .chart-box {
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--light-gray);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--light-gray);
+        }
+
+        .chart-header h3 {
+            font-size: 16px;
+            color: var(--dark);
+            font-weight: 600;
+        }
+
+        .chart-canvas {
+            position: relative;
+            height: 250px;
+        }
+
+        /* === فرم‌ها === */
+        .form-container {
+            background: white;
+            padding: 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--light-gray);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .form-container h2 {
+            text-align: center;
+            margin-bottom: 24px;
+            color: var(--dark);
+            font-size: 20px;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 12px;
+        }
+
+        .form-container h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 50%;
+            transform: translateX(50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--light-gray);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-family: inherit;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        /* === فیلد مبلغ === */
+        .amount-input-container {
+            position: relative;
+        }
+
+        .amount-input-container input {
+            padding-left: 70px;
+            text-align: left;
+            direction: ltr;
+        }
+
+        .amount-input-container::before {
+            content: "تومان";
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+            font-size: 13px;
+            font-weight: 500;
+            background: var(--light);
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--light-gray);
+        }
+
+        .amount-hint {
+            color: var(--gray);
+            font-size: 12px;
+            margin-top: 4px;
+            display: block;
+        }
+
+        /* === تقویم فارسی ساده === */
+        .persian-date-input {
+            background-color: white;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: left 12px center;
+            background-size: 18px;
+            padding-left: 40px;
+        }
+
+        /* === دکمه‌ها === */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary:disabled {
+            background: var(--gray);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* === صفحه تاریخچه === */
+        .history-header, .customers-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--light-gray);
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .history-header h2, .customers-header h2 {
+            font-size: 20px;
+            color: var(--dark);
+            font-weight: 600;
+        }
+
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px 12px 40px;
+            border: 1px solid var(--light-gray);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .sort-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .sort-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--light-gray);
+            background: white;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .sort-btn:hover {
+            background: var(--light);
+            border-color: var(--primary-light);
+        }
+
+        .sort-btn.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* === جداول === */
+        .transactions-table, .customers-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: white;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .transactions-table th, .customers-table th {
+            background: linear-gradient(135deg, var(--light) 0%, var(--light-gray) 100%);
+            padding: 16px;
+            text-align: right;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid var(--light-gray);
+            font-size: 14px;
+        }
+
+        .transactions-table td, .customers-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--light-gray);
+            font-size: 13px;
+        }
+
+        .transactions-table tr:last-child td,
+        .customers-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .transactions-table tr:hover,
+        .customers-table tr:hover {
+            background-color: rgba(67, 97, 238, 0.04);
+        }
+
+        .amount {
+            font-weight: 700;
+            color: var(--success);
+            direction: ltr;
+            text-align: left;
+        }
+
+        /* === دکمه‌های عملیات === */
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+        }
+
+        .btn-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-edit {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .btn-edit:hover {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+
+        .btn-delete:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* === صفحه‌بندی === */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 24px;
+            padding: 16px;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--light-gray);
+        }
+
+        .pagination-info {
+            color: var(--gray);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .page-btn {
+            min-width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--light-gray);
+            background: white;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: var(--light);
+            border-color: var(--primary-light);
+        }
+
+        .page-btn.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .page-btn:disabled {
+            color: var(--light-gray);
+            cursor: not-allowed;
+            background: var(--light);
+        }
+
+        /* === پیام‌ها === */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+            color: white;
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--transition);
+            max-width: 350px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, var(--danger) 0%, var(--danger-dark) 100%);
+        }
+
+        /* === مودال === */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* === حالت خالی === */
+        .empty-state {
+            text-align: center;
+            padding: 40px 24px;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: var(--light-gray);
+            opacity: 0.6;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 8px;
+            color: var(--dark-gray);
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            max-width: 300px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* === نویگیشن موبایل === */
+        .mobile-nav {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            padding: 8px 0;
+            border-top: 2px solid var(--light-gray);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            height: 70px;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 11px;
+            transition: var(--transition);
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            flex: 1;
+            position: relative;
+        }
+
+        .nav-item i {
+            font-size: 20px;
+            margin-bottom: 4px;
+            transition: var(--transition);
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            background: rgba(67, 97, 238, 0.1);
+            transform: translateY(-6px);
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            right: 50%;
+            transform: translateX(50%);
+            width: 30px;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            border-radius: 2px;
+        }
+
+        /* === رسپانسیو === */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 0 16px;
+            }
+            
+            .app-header {
+                padding: 16px;
+                margin-bottom: 16px;
+            }
+            
+            .app-header h1 {
+                font-size: 20px;
+            }
+            
+            .stats-cards {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-container {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .history-header, .customers-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box, .sort-controls {
+                width: 100%;
+            }
+            
+            .pagination {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .transactions-table, .customers-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .mobile-nav {
+                height: 65px;
+            }
+            
+            .connection-status {
+                top: 16px;
+                right: 16px;
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-container {
+                padding: 16px;
+            }
+            
+            .stat-card {
+                padding: 16px;
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .stat-icon {
+                margin-left: 0;
+                margin-bottom: 12px;
+            }
+            
+            .pagination-controls {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+
+        /* === اسکرول بار === */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--light);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-gray);
+        }
+    </style>
+</head>
+<body>
+    <!-- وضعیت اتصال اینترنت -->
+    <div id="connectionStatus" class="connection-status online">
+        <i class="fas fa-wifi"></i>
+        <span>آنلاین</span>
+    </div>
+
+    <div class="app-container">
+        <!-- هدر برنامه -->
+        <header class="app-header">
+            <h1><i class="fas fa-car"></i> مدیریت درآمد تعمیرگاه</h1>
+            <p class="subtitle">نرم‌افزار جامع مدیریت مالی و مشتریان</p>
+        </header>
+
+        <!-- محتوای اصلی -->
+        <main class="main-content">
+            <!-- داشبورد -->
+            <section id="dashboard" class="page active">
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon income-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-income">0</h3>
+                            <p>کل درآمد (تومان)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon count-icon">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-transactions">0</h3>
+                            <p>تعداد تراکنش‌ها</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon average-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="average-income">0</h3>
+                            <p>میانگین درآمد روزانه</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon recent-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="customers-count">0</h3>
+                            <p>تعداد مشتریان</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-box">
+                        <div class="chart-header">
+                            <h3>درآمد روزانه (۷ روز اخیر)</h3>
+                        </div>
+                        <div class="chart-canvas">
+                            <canvas id="dailyChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-box">
+                        <div class="chart-header">
+                            <h3>توزیع خدمات</h3>
+                        </div>
+                        <div class="chart-canvas">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- افزودن درآمد -->
+            <section id="add-income" class="page">
+                <div class="form-container">
+                    <h2>ثبت درآمد جدید</h2>
+                    <form id="incomeForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="customerName">
+                                    <i class="fas fa-user"></i>
+                                    نام مشتری
+                                </label>
+                                <select id="customerName" class="form-control">
+                                    <option value="">انتخاب مشتری</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="amount">
+                                    <i class="fas fa-money-bill"></i>
+                                    مبلغ (تومان)
+                                </label>
+                                <div class="amount-input-container">
+                                    <input type="text" id="amount" class="form-control" placeholder="مثال: 1,250,000" required>
+                                </div>
+                                <span class="amount-hint">مبلغ را با جداکننده هزارگان وارد کنید</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="persianDate">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    تاریخ
+                                </label>
+                                <input type="text" id="persianDate" class="form-control persian-date-input" readonly required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="serviceType">
+                                    <i class="fas fa-tag"></i>
+                                    نوع خدمات
+                                </label>
+                                <select id="serviceType" class="form-control" required>
+                                    <option value="تعمیرات موتور">تعمیرات موتور</option>
+                                    <option value="تعویض روغن">تعویض روغن</option>
+                                    <option value="تعمیرات برقی">تعمیرات برقی</option>
+                                    <option value="تعویض لاستیک">تعویض لاستیک</option>
+                                    <option value="سرویس دوره‌ای">سرویس دوره‌ای</option>
+                                    <option value="دیگر">دیگر</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description">
+                                <i class="fas fa-file-alt"></i>
+                                توضیحات
+                            </label>
+                            <textarea id="description" class="form-control" rows="4" placeholder="شرح خدمات ارائه شده" required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-block" id="submitIncome">
+                            <i class="fas fa-plus"></i> ثبت درآمد
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- تاریخچه تراکنش‌ها -->
+            <section id="history" class="page">
+                <div class="history-header">
+                    <h2>تاریخچه تراکنش‌ها</h2>
+                    <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="جستجو...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="sort-controls">
+                            <button class="sort-btn" data-sort="date" data-order="desc">
+                                <i class="fas fa-sort-amount-down"></i> تاریخ
+                            </button>
+                            <button class="sort-btn" data-sort="amount" data-order="desc">
+                                <i class="fas fa-sort-amount-down"></i> مبلغ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="transactions-container">
+                    <table class="transactions-table">
+                        <thead>
+                            <tr>
+                                <th>تاریخ</th>
+                                <th>مشتری</th>
+                                <th>مبلغ (تومان)</th>
+                                <th>نوع خدمات</th>
+                                <th>توضیحات</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-body">
+                            <!-- تراکنش‌ها اینجا بارگذاری می‌شوند -->
+                        </tbody>
+                    </table>
+                    
+                    <div id="empty-history" class="empty-state" style="display: none;">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <h3>هنوز تراکنشی ثبت نشده است</h3>
+                        <p>برای شروع کار، از تب "ثبت درآمد" یک تراکنش جدید اضافه کنید.</p>
+                        <button class="btn btn-primary" style="margin-top: 16px;" onclick="switchPage('add-income')">
+                            <i class="fas fa-plus"></i> شروع ثبت درآمد
+                        </button>
+                    </div>
+                    
+                    <div id="transactions-pagination" class="pagination" style="display: none;">
+                        <div class="pagination-info">
+                            نمایش <span id="transactions-from">0</span> تا <span id="transactions-to">0</span> از <span id="transactions-total">0</span> تراکنش
+                        </div>
+                        <div class="pagination-controls">
+                            <button class="page-btn" onclick="changeTransactionsPage('first')" id="transactions-first-btn">
+                                <i class="fas fa-angle-double-right"></i>
+                            </button>
+                            <button class="page-btn" onclick="changeTransactionsPage('prev')" id="transactions-prev-btn">
+                                <i class="fas fa-angle-right"></i>
+                            </button>
+                            <div id="transactions-pages" style="display: flex; gap: 4px;"></div>
+                            <button class="page-btn" onclick="changeTransactionsPage('next')" id="transactions-next-btn">
+                                <i class="fas fa-angle-left"></i>
+                            </button>
+                            <button class="page-btn" onclick="changeTransactionsPage('last')" id="transactions-last-btn">
+                                <i class="fas fa-angle-double-left"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- مشتریان -->
+            <section id="customers" class="page">
+                <div class="customers-header">
+                    <h2>مدیریت مشتریان</h2>
+                    <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+                        <div class="search-box">
+                            <input type="text" id="customerSearchInput" placeholder="جستجو...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <button class="btn btn-primary" onclick="openAddCustomerModal()">
+                            <i class="fas fa-user-plus"></i> افزودن مشتری
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="customers-container">
+                    <table class="customers-table">
+                        <thead>
+                            <tr>
+                                <th>نام</th>
+                                <th>شماره موبایل</th>
+                                <th>مدل خودرو</th>
+                                <th>تعداد مراجعات</th>
+                                <th>آخرین مراجعه</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customers-body">
+                            <!-- مشتریان اینجا بارگذاری می‌شوند -->
+                        </tbody>
+                    </table>
+                    
+                    <div id="empty-customers" class="empty-state" style="display: none;">
+                        <i class="fas fa-users"></i>
+                        <h3>لیست مشتریان خالی است</h3>
+                        <p>با افزودن مشتریان جدید، اطلاعات مراجعات آن‌ها را مدیریت کنید.</p>
+                        <button class="btn btn-primary" style="margin-top: 16px;" onclick="openAddCustomerModal()">
+                            <i class="fas fa-user-plus"></i> افزودن مشتری
+                        </button>
+                    </div>
+                    
+                    <div id="customers-pagination" class="pagination" style="display: none;">
+                        <div class="pagination-info">
+                            نمایش <span id="customers-from">0</span> تا <span id="customers-to">0</span> از <span id="customers-total">0</span> مشتری
+                        </div>
+                        <div class="pagination-controls">
+                            <button class="page-btn" onclick="changeCustomersPage('first')" id="customers-first-btn">
+                                <i class="fas fa-angle-double-right"></i>
+                            </button>
+                            <button class="page-btn" onclick="changeCustomersPage('prev')" id="customers-prev-btn">
+                                <i class="fas fa-angle-right"></i>
+                            </button>
+                            <div id="customers-pages" style="display: flex; gap: 4px;"></div>
+                            <button class="page-btn" onclick="changeCustomersPage('next')" id="customers-next-btn">
+                                <i class="fas fa-angle-left"></i>
+                            </button>
+                            <button class="page-btn" onclick="changeCustomersPage('last')" id="customers-last-btn">
+                                <i class="fas fa-angle-double-left"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- پیام‌ها -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-message">عملیات با موفقیت انجام شد</span>
+    </div>
+
+    <!-- نویگیشن موبایل -->
+    <nav class="mobile-nav">
+        <div class="nav-item active" data-page="dashboard">
+            <i class="fas fa-chart-pie"></i>
+            <span>داشبورد</span>
+        </div>
+        <div class="nav-item" data-page="add-income">
+            <i class="fas fa-plus-circle"></i>
+            <span>ثبت درآمد</span>
+        </div>
+        <div class="nav-item" data-page="history">
+            <i class="fas fa-history"></i>
+            <span>تاریخچه</span>
+        </div>
+        <div class="nav-item" data-page="customers">
+            <i class="fas fa-users"></i>
+            <span>مشتریان</span>
+        </div>
+    </nav>
+
+    <!-- مودال مشتری -->
+    <div id="customerModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="customerModalTitle">افزودن مشتری جدید</h2>
+            <form id="customerForm">
+                <input type="hidden" id="customer-id">
+                
+                <div class="form-group">
+                    <label for="customer-name">
+                        <i class="fas fa-user"></i>
+                        نام و نام خانوادگی
+                    </label>
+                    <input type="text" id="customer-name" class="form-control" placeholder="نام کامل مشتری" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customer-mobile">
+                            <i class="fas fa-mobile-alt"></i>
+                            شماره موبایل
+                        </label>
+                        <input type="tel" id="customer-mobile" class="form-control" 
+                               placeholder="09xxxxxxxxx" required pattern="09[0-9]{9}">
+                        <span class="amount-hint">فرمت: 09xxxxxxxxx</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="customer-car">
+                            <i class="fas fa-car"></i>
+                            مدل خودرو
+                        </label>
+                        <input type="text" id="customer-car" class="form-control" 
+                               placeholder="مثال: پژو ۲۰۶، تیبا، سمند" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="customer-notes">
+                        <i class="fas fa-sticky-note"></i>
+                        یادداشت‌ها
+                    </label>
+                    <textarea id="customer-notes" class="form-control" rows="3" 
+                              placeholder="یادداشت‌های اضافی درباره مشتری"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;" id="customerModalSubmit">
+                        <i class="fas fa-save"></i> ذخیره
+                    </button>
+                    <button type="button" class="btn" onclick="closeCustomerModal()" 
+                            style="flex: 1; background: var(--light); color: var(--dark); border: 1px solid var(--light-gray);">
+                        <i class="fas fa-times"></i> انصراف
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ==================== متغیرهای جهانی ====================
+        let db;
+        let currentPage = 'dashboard';
+        let dailyChart, categoryChart;
+        let transactions = [];
+        let customers = [];
+        let currentSort = { field: 'date', order: 'desc' };
+        let isOnline = navigator.onLine;
+        let selectedDate = new persianDate();
+
+        // ==================== متغیرهای صفحه‌بندی ====================
+        let transactionsPagination = {
+            currentPage: 1,
+            itemsPerPage: 10,
+            totalPages: 1,
+            filteredData: []
+        };
+
+        let customersPagination = {
+            currentPage: 1,
+            itemsPerPage: 10,
+            totalPages: 1,
+            filteredData: []
+        };
+
+        // ==================== تابع اصلی تغییر تب ====================
+        function switchPage(pageName) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            const page = document.getElementById(pageName);
+            if (page) {
+                page.classList.add('active');
+                currentPage = pageName;
+            }
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            const navItem = document.querySelector(`[data-page="${pageName}"]`);
+            if (navItem) {
+                navItem.classList.add('active');
+            }
+            
+            if (pageName === 'dashboard') {
+                updateStats();
+                updateCharts();
+            }
+            
+            if (pageName === 'add-income') {
+                updateCustomerDropdown();
+                document.getElementById('persianDate').value = selectedDate.format('YYYY/MM/DD');
+            }
+        }
+
+        // ==================== مدیریت وضعیت اینترنت ====================
+        function updateConnectionStatus() {
+            const status = document.getElementById('connectionStatus');
+            isOnline = navigator.onLine;
+            
+            if (isOnline) {
+                status.className = 'connection-status online';
+                status.innerHTML = '<i class="fas fa-wifi"></i><span>آنلاین</span>';
+            } else {
+                status.className = 'connection-status offline';
+                status.innerHTML = '<i class="fas fa-wifi-slash"></i><span>آفلاین</span>';
+            }
+        }
+
+        // ==================== مدیریت صفحه‌بندی تاریخچه ====================
+        function updateTransactionsPagination() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            let filtered = transactions;
+            if (searchTerm) {
+                filtered = transactions.filter(t => 
+                    (t.customerName && t.customerName.toLowerCase().includes(searchTerm)) ||
+                    (t.description && t.description.toLowerCase().includes(searchTerm)) ||
+                    (t.serviceType && t.serviceType.toLowerCase().includes(searchTerm)) ||
+                    (t.amount && t.amount.includes(searchTerm))
+                );
+            }
+            
+            filtered.sort((a, b) => {
+                let aValue, bValue;
+                
+                switch(currentSort.field) {
+                    case 'date':
+                        aValue = new Date(a.date);
+                        bValue = new Date(b.date);
+                        break;
+                    case 'amount':
+                        aValue = parseInt(a.amount.replace(/,/g, '')) || 0;
+                        bValue = parseInt(b.amount.replace(/,/g, '')) || 0;
+                        break;
+                    default:
+                        aValue = new Date(a.date);
+                        bValue = new Date(b.date);
+                }
+                
+                return currentSort.order === 'desc' ? bValue - aValue : aValue - bValue;
+            });
+            
+            transactionsPagination.filteredData = filtered;
+            transactionsPagination.totalPages = Math.max(1, Math.ceil(filtered.length / transactionsPagination.itemsPerPage));
+            
+            if (transactionsPagination.currentPage > transactionsPagination.totalPages) {
+                transactionsPagination.currentPage = transactionsPagination.totalPages;
+            }
+            
+            renderTransactionsPage();
+            renderTransactionsPaginationControls();
+        }
+
+        function renderTransactionsPage() {
+            const tbody = document.getElementById('transactions-body');
+            const emptyState = document.getElementById('empty-history');
+            const pagination = document.getElementById('transactions-pagination');
+            
+            if (!tbody) return;
+            
+            const startIndex = (transactionsPagination.currentPage - 1) * transactionsPagination.itemsPerPage;
+            const endIndex = Math.min(startIndex + transactionsPagination.itemsPerPage, transactionsPagination.filteredData.length);
+            const pageData = transactionsPagination.filteredData.slice(startIndex, endIndex);
+            
+            if (transactionsPagination.filteredData.length === 0) {
+                tbody.innerHTML = '';
+                if (emptyState) emptyState.style.display = 'block';
+                if (pagination) pagination.style.display = 'none';
+                return;
+            }
+            
+            if (emptyState) emptyState.style.display = 'none';
+            if (pagination) pagination.style.display = 'flex';
+            
+            document.getElementById('transactions-from').textContent = startIndex + 1;
+            document.getElementById('transactions-to').textContent = endIndex;
+            document.getElementById('transactions-total').textContent = transactionsPagination.filteredData.length;
+            
+            let html = '';
+            pageData.forEach(transaction => {
+                html += `
+                    <tr>
+                        <td>${transaction.persianDate || transaction.date}</td>
+                        <td>${transaction.customerName || 'نامشخص'}</td>
+                        <td class="amount">${transaction.amount} تومان</td>
+                        <td>${transaction.serviceType || transaction.category || '-'}</td>
+                        <td>${transaction.description || '-'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-icon btn-edit" onclick="openEditTransactionModal(${transaction.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon btn-delete" onclick="deleteTransaction(${transaction.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        }
+
+        function renderTransactionsPaginationControls() {
+            const pagesContainer = document.getElementById('transactions-pages');
+            if (!pagesContainer) return;
+            
+            pagesContainer.innerHTML = '';
+            
+            let startPage = Math.max(1, transactionsPagination.currentPage - 2);
+            let endPage = Math.min(transactionsPagination.totalPages, transactionsPagination.currentPage + 2);
+            
+            if (startPage === 1) {
+                endPage = Math.min(5, transactionsPagination.totalPages);
+            }
+            
+            if (endPage === transactionsPagination.totalPages) {
+                startPage = Math.max(1, transactionsPagination.totalPages - 4);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `page-btn ${i === transactionsPagination.currentPage ? 'active' : ''}`;
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => {
+                    transactionsPagination.currentPage = i;
+                    updateTransactionsPagination();
+                };
+                pagesContainer.appendChild(pageBtn);
+            }
+            
+            document.getElementById('transactions-first-btn').disabled = transactionsPagination.currentPage === 1;
+            document.getElementById('transactions-prev-btn').disabled = transactionsPagination.currentPage === 1;
+            document.getElementById('transactions-next-btn').disabled = transactionsPagination.currentPage === transactionsPagination.totalPages;
+            document.getElementById('transactions-last-btn').disabled = transactionsPagination.currentPage === transactionsPagination.totalPages;
+        }
+
+        function changeTransactionsPage(action) {
+            switch(action) {
+                case 'first': transactionsPagination.currentPage = 1; break;
+                case 'prev': if (transactionsPagination.currentPage > 1) transactionsPagination.currentPage--; break;
+                case 'next': if (transactionsPagination.currentPage < transactionsPagination.totalPages) transactionsPagination.currentPage++; break;
+                case 'last': transactionsPagination.currentPage = transactionsPagination.totalPages; break;
+            }
+            updateTransactionsPagination();
+        }
+
+        // ==================== مدیریت صفحه‌بندی مشتریان ====================
+        function updateCustomersPagination() {
+            const searchTerm = document.getElementById('customerSearchInput').value.toLowerCase();
+            
+            let filtered = customers;
+            if (searchTerm) {
+                filtered = customers.filter(c => 
+                    (c.name && c.name.toLowerCase().includes(searchTerm)) ||
+                    (c.mobile && c.mobile.includes(searchTerm)) ||
+                    (c.carModel && c.carModel.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            customersPagination.filteredData = filtered;
+            customersPagination.totalPages = Math.max(1, Math.ceil(filtered.length / customersPagination.itemsPerPage));
+            
+            if (customersPagination.currentPage > customersPagination.totalPages) {
+                customersPagination.currentPage = customersPagination.totalPages;
+            }
+            
+            renderCustomersPage();
+            renderCustomersPaginationControls();
+        }
+
+        function renderCustomersPage() {
+            const tbody = document.getElementById('customers-body');
+            const emptyState = document.getElementById('empty-customers');
+            const pagination = document.getElementById('customers-pagination');
+            
+            if (!tbody) return;
+            
+            const startIndex = (customersPagination.currentPage - 1) * customersPagination.itemsPerPage;
+            const endIndex = Math.min(startIndex + customersPagination.itemsPerPage, customersPagination.filteredData.length);
+            const pageData = customersPagination.filteredData.slice(startIndex, endIndex);
+            
+            if (customersPagination.filteredData.length === 0) {
+                tbody.innerHTML = '';
+                if (emptyState) emptyState.style.display = 'block';
+                if (pagination) pagination.style.display = 'none';
+                return;
+            }
+            
+            if (emptyState) emptyState.style.display = 'none';
+            if (pagination) pagination.style.display = 'flex';
+            
+            document.getElementById('customers-from').textContent = startIndex + 1;
+            document.getElementById('customers-to').textContent = endIndex;
+            document.getElementById('customers-total').textContent = customersPagination.filteredData.length;
+            
+            let html = '';
+            pageData.forEach(customer => {
+                html += `
+                    <tr>
+                        <td>${customer.name}</td>
+                        <td>${customer.mobile}</td>
+                        <td>${customer.carModel}</td>
+                        <td>${customer.visitCount || 1}</td>
+                        <td>${customer.lastVisit || '---'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-icon btn-edit" onclick="openEditCustomerModal(${customer.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon btn-delete" onclick="deleteCustomer(${customer.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        }
+
+        function renderCustomersPaginationControls() {
+            const pagesContainer = document.getElementById('customers-pages');
+            if (!pagesContainer) return;
+            
+            pagesContainer.innerHTML = '';
+            
+            let startPage = Math.max(1, customersPagination.currentPage - 2);
+            let endPage = Math.min(customersPagination.totalPages, customersPagination.currentPage + 2);
+            
+            if (startPage === 1) {
+                endPage = Math.min(5, customersPagination.totalPages);
+            }
+            
+            if (endPage === customersPagination.totalPages) {
+                startPage = Math.max(1, customersPagination.totalPages - 4);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `page-btn ${i === customersPagination.currentPage ? 'active' : ''}`;
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => {
+                    customersPagination.currentPage = i;
+                    updateCustomersPagination();
+                };
+                pagesContainer.appendChild(pageBtn);
+            }
+            
+            document.getElementById('customers-first-btn').disabled = customersPagination.currentPage === 1;
+            document.getElementById('customers-prev-btn').disabled = customersPagination.currentPage === 1;
+            document.getElementById('customers-next-btn').disabled = customersPagination.currentPage === customersPagination.totalPages;
+            document.getElementById('customers-last-btn').disabled = customersPagination.currentPage === customersPagination.totalPages;
+        }
+
+        function changeCustomersPage(action) {
+            switch(action) {
+                case 'first': customersPagination.currentPage = 1; break;
+                case 'prev': if (customersPagination.currentPage > 1) customersPagination.currentPage--; break;
+                case 'next': if (customersPagination.currentPage < customersPagination.totalPages) customersPagination.currentPage++; break;
+                case 'last': customersPagination.currentPage = customersPagination.totalPages; break;
+            }
+            updateCustomersPagination();
+        }
+
+        // ==================== رویدادهای اولیه ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            updateConnectionStatus();
+            window.addEventListener('online', updateConnectionStatus);
+            window.addEventListener('offline', updateConnectionStatus);
+            
+            initDB();
+            
+            // تنظیم تاریخ امروز
+            document.getElementById('persianDate').value = selectedDate.format('YYYY/MM/DD');
+            
+            // راه‌اندازی فرم‌ها
+            setupIncomeForm();
+            setupCustomerForm();
+            
+            // راه‌اندازی نویگیشن
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.getAttribute('data-page');
+                    switchPage(page);
+                });
+            });
+            
+            // جستجو در تاریخچه
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    transactionsPagination.currentPage = 1;
+                    updateTransactionsPagination();
+                });
+            }
+            
+            // جستجو در مشتریان
+            const customerSearchInput = document.getElementById('customerSearchInput');
+            if (customerSearchInput) {
+                customerSearchInput.addEventListener('input', function(e) {
+                    customersPagination.currentPage = 1;
+                    updateCustomersPagination();
+                });
+            }
+            
+            // دکمه‌های مرتب‌سازی
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const field = this.dataset.sort;
+                    let order = this.dataset.order;
+                    
+                    order = order === 'desc' ? 'asc' : 'desc';
+                    currentSort = { field, order };
+                    
+                    document.querySelectorAll('.sort-btn').forEach(b => {
+                        b.classList.remove('active');
+                        const icon = b.querySelector('i');
+                        
+                        if (b.dataset.sort === field) {
+                            b.classList.add('active');
+                            b.dataset.order = order;
+                            
+                            if (order === 'desc') {
+                                icon.className = 'fas fa-sort-amount-down';
+                            } else {
+                                icon.className = 'fas fa-sort-amount-up';
+                            }
+                        }
+                    });
+                    
+                    updateTransactionsPagination();
+                });
+            });
+            
+            // بستن مودال
+            document.getElementById('customerModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeCustomerModal();
+                }
+            });
+            
+            // اضافه کردن داده‌های نمونه
+            setTimeout(() => {
+                if (transactions.length === 0 && customers.length === 0) {
+                    addSampleData();
+                }
+            }, 1000);
+        });
+
+        // ==================== پایگاه داده ====================
+        function initDB() {
+            const DB_NAME = 'CarRepairShopDB';
+            const DB_VERSION = 4;
+            
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            
+            request.onerror = function(event) {
+                console.error('خطا در باز کردن پایگاه‌داده:', event.target.error);
+                showToast('خطا در اتصال به پایگاه‌داده', 'error');
+            };
+            
+            request.onsuccess = function(event) {
+                db = event.target.result;
+                console.log('پایگاه‌داده با موفقیت باز شد');
+                loadAllData();
+            };
+            
+            request.onupgradeneeded = function(event) {
+                console.log('Upgrading database...');
+                db = event.target.result;
+                
+                if (!db.objectStoreNames.contains('transactions')) {
+                    const transactionStore = db.createObjectStore('transactions', { 
+                        keyPath: 'id', 
+                        autoIncrement: true 
+                    });
+                    transactionStore.createIndex('date', 'date', { unique: false });
+                    transactionStore.createIndex('amount', 'amount', { unique: false });
+                    transactionStore.createIndex('customerId', 'customerId', { unique: false });
+                }
+                
+                if (!db.objectStoreNames.contains('customers')) {
+                    const customerStore = db.createObjectStore('customers', { 
+                        keyPath: 'id', 
+                        autoIncrement: true 
+                    });
+                    customerStore.createIndex('name', 'name', { unique: false });
+                    customerStore.createIndex('mobile', 'mobile', { unique: true });
+                }
+            };
+        }
+
+        function loadAllData() {
+            loadTransactions();
+            loadCustomers();
+        }
+
+        function loadTransactions() {
+            if (!db) return;
+            
+            const transaction = db.transaction(['transactions'], 'readonly');
+            const store = transaction.objectStore('transactions');
+            const request = store.getAll();
+            
+            request.onsuccess = function(event) {
+                transactions = event.target.result || [];
+                console.log(`تعداد ${transactions.length} تراکنش بارگذاری شد`);
+                updateStats();
+                updateTransactionsPagination();
+                if (currentPage === 'dashboard') {
+                    updateCharts();
+                }
+            };
+        }
+
+        function loadCustomers() {
+            if (!db) return;
+            
+            const transaction = db.transaction(['customers'], 'readonly');
+            const store = transaction.objectStore('customers');
+            const request = store.getAll();
+            
+            request.onsuccess = function(event) {
+                customers = event.target.result || [];
+                console.log(`تعداد ${customers.length} مشتری بارگذاری شد`);
+                updateStats();
+                updateCustomersPagination();
+                updateCustomerDropdown();
+            };
+        }
+
+        // ==================== به‌روزرسانی آمار ====================
+        function updateStats() {
+            // کل درآمد
+            const totalIncome = transactions.reduce((sum, t) => sum + (parseInt(t.amount.replace(/,/g, '')) || 0), 0);
+            document.getElementById('total-income').textContent = formatNumber(totalIncome);
+            
+            // تعداد تراکنش‌ها
+            document.getElementById('total-transactions').textContent = formatNumber(transactions.length);
+            
+            // میانگین درآمد روزانه
+            const dates = [...new Set(transactions.map(t => t.date))];
+            const dailyAvg = dates.length > 0 ? totalIncome / dates.length : 0;
+            document.getElementById('average-income').textContent = formatNumber(Math.round(dailyAvg));
+            
+            // تعداد مشتریان
+            document.getElementById('customers-count').textContent = formatNumber(customers.length);
+        }
+
+        // ==================== نمودارها ====================
+        function updateCharts() {
+            updateDailyChart();
+            updateCategoryChart();
+        }
+
+        function updateDailyChart() {
+            const ctx = document.getElementById('dailyChart');
+            if (!ctx) return;
+            
+            const groupedByDate = {};
+            transactions.forEach(t => {
+                const dateKey = t.persianDate || t.date;
+                if (!groupedByDate[dateKey]) {
+                    groupedByDate[dateKey] = 0;
+                }
+                groupedByDate[dateKey] += parseInt(t.amount.replace(/,/g, '')) || 0;
+            });
+            
+            const sortedDates = Object.keys(groupedByDate).sort();
+            const last7Dates = sortedDates.slice(-7);
+            const amounts = last7Dates.map(date => groupedByDate[date]);
+            
+            if (dailyChart) {
+                dailyChart.destroy();
+            }
+            
+            dailyChart = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: last7Dates,
+                    datasets: [{
+                        label: 'درآمد (تومان)',
+                        data: amounts,
+                        backgroundColor: 'rgba(67, 97, 238, 0.8)',
+                        borderColor: 'rgba(67, 97, 238, 1)',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatNumber(value) + ' ت';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `درآمد: ${formatNumber(context.raw)} تومان`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCategoryChart() {
+            const ctx = document.getElementById('categoryChart');
+            if (!ctx) return;
+            
+            const groupedByCategory = {};
+            transactions.forEach(t => {
+                const category = t.serviceType || t.category || 'سایر';
+                if (!groupedByCategory[category]) {
+                    groupedByCategory[category] = 0;
+                }
+                groupedByCategory[category] += parseInt(t.amount.replace(/,/g, '')) || 0;
+            });
+            
+            const categories = Object.keys(groupedByCategory);
+            const amounts = Object.values(groupedByCategory);
+            
+            const colors = [
+                'rgba(67, 97, 238, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(245, 158, 11, 0.8)',
+                'rgba(239, 68, 68, 0.8)',
+                'rgba(139, 92, 246, 0.8)',
+                'rgba(236, 72, 153, 0.8)'
+            ];
+            
+            if (categoryChart) {
+                categoryChart.destroy();
+            }
+            
+            categoryChart = new Chart(ctx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: categories,
+                    datasets: [{
+                        label: 'درآمد بر اساس نوع خدمات',
+                        data: amounts,
+                        backgroundColor: colors.slice(0, categories.length),
+                        borderWidth: 2,
+                        borderColor: 'white'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${context.label}: ${formatNumber(value)} تومان (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==================== فرم‌ها ====================
+        function setupIncomeForm() {
+            const incomeForm = document.getElementById('incomeForm');
+            if (!incomeForm) return;
+            
+            incomeForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const customerId = document.getElementById('customerName').value;
+                const amount = document.getElementById('amount').value;
+                const date = document.getElementById('persianDate').value;
+                const serviceType = document.getElementById('serviceType').value;
+                const description = document.getElementById('description').value;
+                
+                if (!customerId || !amount || !date) {
+                    showToast('لطفاً فیلدهای ضروری را پر کنید', 'error');
+                    return;
+                }
+                
+                const customer = customers.find(c => c.id == customerId);
+                
+                const transaction = {
+                    customerId: parseInt(customerId),
+                    customerName: customer ? customer.name : 'نامشخص',
+                    amount: amount,
+                    persianDate: date,
+                    date: new Date().toISOString(),
+                    serviceType: serviceType,
+                    description: description,
+                    createdAt: new Date().toISOString()
+                };
+                
+                saveTransaction(transaction);
+            });
+            
+            // جداکننده هزارگان
+            const amountInput = document.getElementById('amount');
+            if (amountInput) {
+                amountInput.addEventListener('input', function() {
+                    applyThousandSeparator(this);
+                });
+            }
+        }
+
+        function setupCustomerForm() {
+            const customerForm = document.getElementById('customerForm');
+            if (!customerForm) return;
+            
+            customerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const id = document.getElementById('customer-id').value;
+                const name = document.getElementById('customer-name').value;
+                const mobile = document.getElementById('customer-mobile').value;
+                const carModel = document.getElementById('customer-car').value;
+                const notes = document.getElementById('customer-notes').value;
+                
+                const mobileRegex = /^09[0-9]{9}$/;
+                if (!mobileRegex.test(mobile)) {
+                    showToast('شماره موبایل معتبر نیست. فرمت صحیح: 09xxxxxxxxx', 'error');
+                    return;
+                }
+                
+                const customer = {
+                    name: name,
+                    mobile: mobile,
+                    carModel: carModel,
+                    notes: notes,
+                    visitCount: 1,
+                    lastVisit: new persianDate().format('YYYY/MM/DD'),
+                    createdAt: new Date().toISOString()
+                };
+                
+                if (id) {
+                    customer.id = parseInt(id);
+                    updateCustomer(customer);
+                } else {
+                    saveCustomer(customer);
+                }
+            });
+        }
+
+        function updateCustomerDropdown() {
+            const select = document.getElementById('customerName');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">انتخاب مشتری</option>';
+            customers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = customer.id;
+                option.textContent = `${customer.name} - ${customer.carModel}`;
+                select.appendChild(option);
+            });
+        }
+
+        // ==================== عملیات پایگاه داده ====================
+        function saveTransaction(transaction) {
+            if (!db) return;
+            
+            const tx = db.transaction(['transactions'], 'readwrite');
+            const store = tx.objectStore('transactions');
+            const request = store.add(transaction);
+            
+            request.onsuccess = function(event) {
+                transaction.id = event.target.result;
+                transactions.push(transaction);
+                
+                updateStats();
+                updateTransactionsPagination();
+                updateCharts();
+                showToast('درآمد جدید با موفقیت ثبت شد ✅');
+                
+                document.getElementById('incomeForm').reset();
+                document.getElementById('persianDate').value = selectedDate.format('YYYY/MM/DD');
+                
+                switchPage('dashboard');
+            };
+            
+            request.onerror = function(event) {
+                console.error('خطا در ذخیره تراکنش:', event.target.error);
+                showToast('خطا در ذخیره تراکنش', 'error');
+            };
+        }
+
+        function saveCustomer(customer) {
+            if (!db) return;
+            
+            const tx = db.transaction(['customers'], 'readwrite');
+            const store = tx.objectStore('customers');
+            const request = store.add(customer);
+            
+            request.onsuccess = function(event) {
+                customer.id = event.target.result;
+                customers.push(customer);
+                
+                updateStats();
+                updateCustomersPagination();
+                updateCustomerDropdown();
+                showToast('مشتری جدید با موفقیت ثبت شد ✅');
+                closeCustomerModal();
+            };
+            
+            request.onerror = function(event) {
+                console.error('خطا در ذخیره مشتری:', event.target.error);
+                if (event.target.error.name === 'ConstraintError') {
+                    showToast('شماره موبایل تکراری است', 'error');
+                } else {
+                    showToast('خطا در ذخیره مشتری', 'error');
+                }
+            };
+        }
+
+        function updateCustomer(updatedCustomer) {
+            if (!db) return;
+            
+            const tx = db.transaction(['customers'], 'readwrite');
+            const store = tx.objectStore('customers');
+            const request = store.put(updatedCustomer);
+            
+            request.onsuccess = function(event) {
+                const index = customers.findIndex(c => c.id === updatedCustomer.id);
+                if (index !== -1) {
+                    customers[index] = updatedCustomer;
+                }
+                
+                updateCustomersPagination();
+                updateCustomerDropdown();
+                showToast('اطلاعات مشتری به‌روزرسانی شد ✅');
+                closeCustomerModal();
+            };
+            
+            request.onerror = function(event) {
+                console.error('خطا در به‌روزرسانی مشتری:', event.target.error);
+                showToast('خطا در ویرایش مشتری', 'error');
+            };
+        }
+
+        function deleteTransaction(id) {
+            if (!confirm('آیا از حذف این تراکنش اطمینان دارید؟')) {
+                return;
+            }
+            
+            if (!db) return;
+            
+            const tx = db.transaction(['transactions'], 'readwrite');
+            const store = tx.objectStore('transactions');
+            const request = store.delete(id);
+            
+            request.onsuccess = function(event) {
+                transactions = transactions.filter(t => t.id !== id);
+                updateStats();
+                updateTransactionsPagination();
+                updateCharts();
+                showToast('تراکنش حذف شد ✅');
+            };
+            
+            request.onerror = function(event) {
+                console.error('خطا در حذف تراکنش:', event.target.error);
+                showToast('خطا در حذف تراکنش', 'error');
+            };
+        }
+
+        function deleteCustomer(id) {
+            if (!confirm('آیا از حذف این مشتری اطمینان دارید؟')) {
+                return;
+            }
+            
+            if (!db) return;
+            
+            const tx = db.transaction(['customers'], 'readwrite');
+            const store = tx.objectStore('customers');
+            const request = store.delete(id);
+            
+            request.onsuccess = function(event) {
+                customers = customers.filter(c => c.id !== id);
+                transactions = transactions.filter(t => t.customerId !== id);
+                
+                updateStats();
+                updateCustomersPagination();
+                updateCustomerDropdown();
+                updateTransactionsPagination();
+                showToast('مشتری حذف شد ✅');
+            };
+            
+            request.onerror = function(event) {
+                console.error('خطا در حذف مشتری:', event.target.error);
+                showToast('خطا در حذف مشتری', 'error');
+            };
+        }
+
+        // ==================== مودال مشتری ====================
+        function openAddCustomerModal() {
+            document.getElementById('customerModalTitle').textContent = 'افزودن مشتری جدید';
+            document.getElementById('customerModalSubmit').innerHTML = '<i class="fas fa-save"></i> ذخیره مشتری';
+            
+            document.getElementById('customerForm').reset();
+            document.getElementById('customer-id').value = '';
+            
+            document.getElementById('customerModal').style.display = 'flex';
+        }
+        
+        function openEditCustomerModal(id) {
+            const customer = customers.find(c => c.id === id);
+            if (!customer) return;
+            
+            document.getElementById('customerModalTitle').textContent = 'ویرایش اطلاعات مشتری';
+            document.getElementById('customerModalSubmit').innerHTML = '<i class="fas fa-save"></i> به‌روزرسانی';
+            
+            document.getElementById('customer-id').value = customer.id;
+            document.getElementById('customer-name').value = customer.name;
+            document.getElementById('customer-mobile').value = customer.mobile;
+            document.getElementById('customer-car').value = customer.carModel;
+            document.getElementById('customer-notes').value = customer.notes || '';
+            
+            document.getElementById('customerModal').style.display = 'flex';
+        }
+        
+        function closeCustomerModal() {
+            document.getElementById('customerModal').style.display = 'none';
+        }
+
+        function openEditTransactionModal(id) {
+            showToast('قابلیت ویرایش تراکنش در نسخه بعدی اضافه خواهد شد', 'error');
+        }
+
+        // ==================== توابع کمکی ====================
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+        
+        function applyThousandSeparator(input) {
+            let value = input.value.replace(/,/g, '');
+            
+            if (!/^\d*$/.test(value)) {
+                value = value.replace(/\D/g, '');
+            }
+            
+            if (value.length > 0) {
+                input.value = formatNumber(parseInt(value));
+            } else {
+                input.value = '';
+            }
+        }
+        
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            if (!toast || !toastMessage) return;
+            
+            toastMessage.textContent = message;
+            toast.className = 'toast';
+            
+            if (type === 'error') {
+                toast.classList.add('error');
+                toast.querySelector('i').className = 'fas fa-exclamation-circle';
+            } else {
+                toast.querySelector('i').className = 'fas fa-check-circle';
+            }
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // ==================== داده‌های نمونه ====================
+        function addSampleData() {
+            const today = new persianDate();
+            
+            // مشتریان نمونه
+            const sampleCustomers = [
+                {
+                    name: 'علیرضا محمدی',
+                    mobile: '09123456789',
+                    carModel: 'پژو ۲۰۶',
+                    notes: 'مشتری ثابت',
+                    visitCount: 5,
+                    lastVisit: today.format('YYYY/MM/DD'),
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    name: 'مریم کریمی',
+                    mobile: '09351234567',
+                    carModel: 'تیبا ۲',
+                    notes: '',
+                    visitCount: 3,
+                    lastVisit: today.subtract('day', 2).format('YYYY/MM/DD'),
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    name: 'رضا نوروزی',
+                    mobile: '09187654321',
+                    carModel: 'سمند LX',
+                    notes: 'خودروی شرکتی',
+                    visitCount: 7,
+                    lastVisit: today.subtract('day', 1).format('YYYY/MM/DD'),
+                    createdAt: new Date().toISOString()
+                }
+            ];
+            
+            // تراکنش‌های نمونه
+            const sampleTransactions = [];
+            const serviceTypes = ['تعمیرات موتور', 'تعویض روغن', 'تعمیرات برقی', 'تعویض لاستیک', 'سرویس دوره‌ای'];
+            const amounts = [650000, 850000, 1250000, 1850000, 2350000];
+            
+            for (let i = 0; i < 15; i++) {
+                const date = today.subtract('day', i);
+                const customerId = i % 3 + 1;
+                const customer = sampleCustomers[customerId - 1];
+                
+                sampleTransactions.push({
+                    customerId: customerId,
+                    customerName: customer.name,
+                    amount: formatNumber(amounts[Math.floor(Math.random() * amounts.length)]),
+                    persianDate: date.format('YYYY/MM/DD'),
+                    date: new Date().toISOString(),
+                    serviceType: serviceTypes[Math.floor(Math.random() * serviceTypes.length)],
+                    description: 'سرویس کامل خودرو',
+                    createdAt: new Date().toISOString()
+                });
+            }
+            
+            // ذخیره مشتریان
+            sampleCustomers.forEach(customer => {
+                if (!db) return;
+                const tx = db.transaction(['customers'], 'readwrite');
+                const store = tx.objectStore('customers');
+                store.add(customer);
+            });
+            
+            // ذخیره تراکنش‌ها
+            sampleTransactions.forEach(transaction => {
+                if (!db) return;
+                const tx = db.transaction(['transactions'], 'readwrite');
+                const store = tx.objectStore('transactions');
+                store.add(transaction);
+            });
+            
+            setTimeout(() => {
+                loadAllData();
+                showToast('داده‌های نمونه برای شروع کار اضافه شدند 📊');
+            }, 500);
+        }
+    </script>
+</body>
+</html>
